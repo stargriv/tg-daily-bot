@@ -92,7 +92,7 @@ The bot will automatically extract and send the reflection for the current date.
 go build
 
 # Run the bot
-./saa-bot
+./tg-daily-bot
 ```
 
 ## Cron Schedule Format
@@ -127,17 +127,17 @@ The cron schedule uses the standard 5-field format:
    go build
    ```
 
-2. Create a systemd service file `/etc/systemd/system/saa-bot.service`:
+2. Create a systemd service file `/etc/systemd/system/tg-daily-bot.service`:
    ```ini
    [Unit]
-   Description=Telegram SAA Bot
+   Description=Telegram Daily Bot
    After=network.target
 
    [Service]
    Type=simple
    User=youruser
-   WorkingDirectory=/path/to/saa-bot
-   ExecStart=/path/to/saa-bot/saa-bot
+   WorkingDirectory=/path/to/tg-daily-bot
+   ExecStart=/path/to/tg-daily-bot/tg-daily-bot
    Restart=always
    RestartSec=10
 
@@ -148,31 +148,31 @@ The cron schedule uses the standard 5-field format:
 3. Enable and start the service:
    ```bash
    sudo systemctl daemon-reload
-   sudo systemctl enable saa-bot
-   sudo systemctl start saa-bot
+   sudo systemctl enable tg-daily-bot
+   sudo systemctl start tg-daily-bot
    ```
 
 4. Check status:
    ```bash
-   sudo systemctl status saa-bot
+   sudo systemctl status tg-daily-bot
    ```
 
 5. View logs:
    ```bash
-   sudo journalctl -u saa-bot -f
+   sudo journalctl -u tg-daily-bot -f
    ```
 
 ### Using screen (Alternative)
 
 ```bash
-screen -S saa-bot
-./saa-bot
+screen -S tg-daily-bot
+./tg-daily-bot
 # Press Ctrl+A then D to detach
 ```
 
 To reattach later:
 ```bash
-screen -r saa-bot
+screen -r tg-daily-bot
 ```
 
 ## Environment Variables

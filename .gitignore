@@ -4,10 +4,10 @@
 *.dll
 *.so
 *.dylib
-saa-bot
-saa-bot-linux
-saa-bot-linux-32
-saa-bot-arm64
+tg-daily-bot
+tg-daily-bot-linux
+tg-daily-bot-linux-32
+tg-daily-bot-arm64
 
 # Test binary, built with `go test -c`
 *.test

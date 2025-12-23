@@ -1,7 +1,7 @@
 .PHONY: build run clean test install deploy help
 
 # Binary name
-BINARY=saa-bot
+BINARY=tg-daily-bot
 # Build directory
 BUILD_DIR=.
 

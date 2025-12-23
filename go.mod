@@ -1,4 +1,4 @@
-module saa-bot
+module tg-daily-bot
 
 go 1.25.5
 
