@@ -80,7 +80,7 @@ uninstall: ## Uninstall the bot from /usr/local/bin
 deploy-systemd: ## Deploy as systemd service (requires sudo)
 	@echo "Creating systemd service..."
 	@echo "[Unit]" | sudo tee /etc/systemd/system/$(BINARY).service
-	@echo "Description=Telegram SAA Bot" | sudo tee -a /etc/systemd/system/$(BINARY).service
+	@echo "Description=Telegram Daily Bot" | sudo tee -a /etc/systemd/system/$(BINARY).service
 	@echo "After=network.target" | sudo tee -a /etc/systemd/system/$(BINARY).service
 	@echo "" | sudo tee -a /etc/systemd/system/$(BINARY).service
 	@echo "[Service]" | sudo tee -a /etc/systemd/system/$(BINARY).service
