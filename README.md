@@ -255,26 +255,20 @@ The bot includes built-in duplicate detection to prevent sending the same messag
 
 **How it works:**
 
-1. **Channel-based detection (Primary)**:
-   - Bot fetches recent messages from Telegram using the Bot API
-   - Checks if any message from today contains today's date header
-   - If found, skips sending and logs a message
-   - **Works across bot restarts and GitHub Actions runs** ✅
+The bot tracks the last sent date in a `.last_sent_date` file:
+- Before sending, checks if a message was already sent today
+- If already sent, skips sending and logs a message
+- Records the date after successful delivery
 
-2. **File-based detection (Fallback)**:
-   - If channel check fails, falls back to `.last_sent_date` file
-   - Tracks the last sent date locally
-   - Works for VPS deployments across restarts
+**For VPS Deployments:**
+- File persists across bot restarts
+- Works automatically without any setup
 
-**Why this matters for GitHub Actions:**
-- ✅ **Works perfectly!** The bot checks actual Telegram messages, not local files
-- ✅ Even if the workflow runs multiple times, it won't send duplicates
-- ✅ No need to persist state between GitHub Actions runs
-
-**Limitations:**
-- The bot can only check messages it has received via getUpdates
-- Make sure the bot has been running or receiving updates to see messages
-- The bot needs to be added to the group with message history access
+**For GitHub Actions:**
+- Uses **GitHub Actions cache** to persist the tracking file between workflow runs
+- Cache is automatically restored before each run
+- Cache is saved after successful message delivery
+- Cache persists for up to 7 days (more than enough for daily workflows)
 
 ## Troubleshooting
 
@@ -299,10 +293,10 @@ The bot includes built-in duplicate detection to prevent sending the same messag
 - View logs to see if duplicate detection is working
 
 ### Duplicate messages in GitHub Actions
-- The bot should automatically prevent duplicates by checking the channel
-- If duplicates still occur, check the bot logs for "Checking channel for message" messages
-- Ensure the bot has received updates (may need to send a test message first)
-- Verify the bot is added to the group with proper permissions
+- The bot uses GitHub Actions cache to track sent messages
+- If duplicates occur, check the workflow logs for cache restore/save messages
+- Cache can be manually cleared from Settings → Actions → Caches if needed
+- Ensure the workflow completes successfully so the cache is saved
 
 ## License
 

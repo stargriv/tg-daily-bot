@@ -1,12 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -143,101 +139,9 @@ func convertMarkdownToHTML(text string) string {
 	return text
 }
 
-// TelegramMessage represents a message from the Telegram API
-type TelegramMessage struct {
-	MessageID int    `json:"message_id"`
-	Text      string `json:"text"`
-	Date      int64  `json:"date"`
-}
-
-// TelegramResponse represents the response from getUpdates API
-type TelegramResponse struct {
-	OK     bool `json:"ok"`
-	Result []struct {
-		UpdateID int              `json:"update_id"`
-		Message  TelegramMessage  `json:"message"`
-	} `json:"result"`
-}
-
-// checkChannelForTodaysMessage checks if a message with today's date was already posted to the channel
-func checkChannelForTodaysMessage(botToken string, chatID int64, threadID int, date time.Time) (bool, error) {
-	// Format today's date header (plain text version for comparison)
-	todayHeader := formatDateHeaderPlainText(date)
-	log.Printf("🔍 Checking channel for message with date: %s", todayHeader)
-
-	// Use Telegram Bot API to get recent updates
-	// Note: This method fetches updates received by the bot, which includes messages in groups where the bot is added
-	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/getUpdates", botToken)
-
-	// Add parameters to get recent updates
-	params := url.Values{}
-	params.Add("limit", "100")  // Get last 100 updates
-	params.Add("timeout", "0")  // Don't wait for new updates
-
-	resp, err := http.Get(apiURL + "?" + params.Encode())
-	if err != nil {
-		return false, fmt.Errorf("failed to fetch updates: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	var telegramResp TelegramResponse
-	if err := json.Unmarshal(body, &telegramResp); err != nil {
-		return false, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	if !telegramResp.OK {
-		return false, fmt.Errorf("telegram API returned error")
-	}
-
-	// Check each message for today's date header
-	messagesChecked := 0
-	for _, update := range telegramResp.Result {
-		msg := update.Message
-
-		// Check if message is from the target chat
-		// Note: We can't easily filter by threadID through getUpdates
-		// So we'll check all messages from today in the chat
-
-		// Parse message date (Unix timestamp)
-		msgTime := time.Unix(msg.Date, 0)
-
-		// Only check messages from today
-		if msgTime.Format("2006-01-02") == date.Format("2006-01-02") {
-			messagesChecked++
-
-			// Check if message text contains today's date header
-			if strings.Contains(msg.Text, todayHeader) {
-				log.Printf("✓ Found existing message with today's date (Message ID: %d)", msg.MessageID)
-				return true, nil
-			}
-		}
-	}
-
-	log.Printf("ℹ️  Checked %d messages from today, no duplicate found", messagesChecked)
-	return false, nil
-}
-
 // checkIfAlreadySentToday checks if a message has already been sent today
-// First checks the channel for existing messages, then falls back to file tracking
-func checkIfAlreadySentToday(bot *tele.Bot, chatID int64, threadID int, date time.Time) (bool, error) {
-	// First, try to check the actual channel for messages
-	if bot != nil {
-		found, err := checkChannelForTodaysMessage(bot.Token, chatID, threadID, date)
-		if err != nil {
-			log.Printf("⚠️  Warning: Failed to check channel messages: %v. Falling back to file tracking.", err)
-		} else if found {
-			// Update the tracking file to stay in sync
-			_ = recordSentDate(date)
-			return true, nil
-		}
-	}
-
-	// Fall back to file-based tracking
+// by reading the last sent date from a tracking file
+func checkIfAlreadySentToday(date time.Time) (bool, error) {
 	const trackingFile = ".last_sent_date"
 
 	// Format today's date as YYYY-MM-DD
@@ -248,17 +152,18 @@ func checkIfAlreadySentToday(bot *tele.Bot, chatID int64, threadID int, date tim
 	if err != nil {
 		// File doesn't exist or can't be read - assume not sent today
 		if os.IsNotExist(err) {
-			log.Printf("No tracking file found - first time sending")
+			log.Printf("📝 No tracking file found - first time sending")
 			return false, nil
 		}
 		return false, fmt.Errorf("failed to read tracking file: %w", err)
 	}
 
 	lastSentDate := strings.TrimSpace(string(data))
-	log.Printf("Last sent date from file: %s, Today: %s", lastSentDate, todayStr)
+	log.Printf("📅 Last sent date: %s, Today: %s", lastSentDate, todayStr)
 
 	// Check if we already sent today
 	if lastSentDate == todayStr {
+		log.Printf("✓ Already sent message for today")
 		return true, nil
 	}
 
@@ -332,7 +237,7 @@ func main() {
 
 	// Check if we already sent a message today
 	today := time.Now()
-	alreadySent, err := checkIfAlreadySentToday(bot, config.ChatID, config.MessageThread, today)
+	alreadySent, err := checkIfAlreadySentToday(today)
 	if err != nil {
 		log.Printf("Warning: Failed to check duplicate status: %v", err)
 	}
@@ -372,7 +277,7 @@ func main() {
 
 		// Check if we already sent today
 		today := time.Now()
-		alreadySent, err := checkIfAlreadySentToday(bot, config.ChatID, config.MessageThread, today)
+		alreadySent, err := checkIfAlreadySentToday(today)
 		if err != nil {
 			log.Printf("Warning: Failed to check duplicate status: %v", err)
 		}

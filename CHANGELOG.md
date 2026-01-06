@@ -5,30 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Simplified duplicate detection to use file-based tracking only
+- GitHub Actions workflow now uses cache to persist `.last_sent_date` between runs
+- Removed complex channel-checking logic (Telegram Bot API limitations)
+- Improved logging with emoji indicators for better visibility
+
+### Added
+- GitHub Actions cache integration for tracking file persistence
+- Cache restore and save steps in workflow
+
 ## [1.2.0] - 2026-01-06
 
 ### Added
-- **Channel-based duplicate detection** using Telegram Bot API getUpdates
-- Checks actual Telegram messages to detect if today's message was already sent
-- Fallback to file-based tracking if channel check fails
-- `.last_sent_date` tracking file for persistent duplicate detection (fallback)
+- Duplicate message detection to prevent sending the same date's message multiple times
+- `.last_sent_date` tracking file for persistent duplicate detection
 - Comprehensive tests for duplicate detection logic
 - Helper function `formatDateHeaderPlainText()` for date comparison
-- HTTP client for calling Telegram Bot API directly
+- GitHub Actions cache support for state persistence between runs
 
 ### Changed
-- **Duplicate detection now works across GitHub Actions runs** (checks channel, not local files)
-- Bot now checks for duplicates before sending messages using two-tier approach
+- Bot now checks for duplicates before sending messages
 - Records sent date after successful message delivery
 - Improved logging for duplicate detection status with emoji indicators
 - GitHub Actions workflow now downloads pre-built binary from releases instead of building
 - Reduced workflow execution time by eliminating Go build step
 
 ### Features
-- **Channel-Based Duplicate Detection**: Checks actual Telegram messages to prevent duplicates
-- **GitHub Actions Compatible**: Works perfectly even when runners are ephemeral
-- **Two-Tier Detection**: Primary channel check with file-based fallback
-- **Persistent Across Runs**: No need to store state between GitHub Actions runs
+- **File-Based Duplicate Detection**: Simple and reliable tracking
+- **GitHub Actions Cache**: Persists tracking file between workflow runs
+- **VPS Compatible**: Works across bot restarts
 - **Smart Scheduling**: Safe to run multiple times per day without spamming
 - **Faster Workflow**: Downloads pre-built binary from releases (~3-5 seconds vs ~30+ seconds for build)
 

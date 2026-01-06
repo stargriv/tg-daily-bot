@@ -17,6 +17,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Restore tracking file from cache
+        uses: actions/cache@v4
+        with:
+          path: .last_sent_date
+          key: bot-tracking-${{ github.run_id }}
+          restore-keys: |
+            bot-tracking-
+
       - name: Download latest release binary
         run: |
           # Get the latest release info
@@ -80,3 +88,10 @@ jobs:
           RUN_ONCE: true
         run: |
           ./tg-daily-bot
+
+      - name: Save tracking file to cache
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: .last_sent_date
+          key: bot-tracking-${{ github.run_id }}
