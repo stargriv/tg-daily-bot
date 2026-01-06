@@ -8,6 +8,7 @@ A lightweight Telegram bot that sends daily reflections from a markdown file to 
 - Parses markdown files with date-based headers (format: `## MM-DD`)
 - Send messages to specific topics in Telegram group chats
 - Scheduled message posting using cron expressions
+- **Duplicate detection**: Prevents sending the same date's message multiple times
 - Minimal resource usage
 - Easy configuration via environment variables
 - Fallback to custom message if no reflection found for today
@@ -245,6 +246,22 @@ The GitHub Actions workflow:
 | `MESSAGE` | No | `Hello from your scheduled bot!` | Fallback message if no reflection found for today |
 | `RUN_ONCE` | No | `false` | Set to `true` to send one message and exit (for GitHub Actions/single execution) |
 
+## Duplicate Detection
+
+The bot includes built-in duplicate detection to prevent sending the same message multiple times in a day. This is especially useful when:
+- Running the bot via GitHub Actions (multiple triggers)
+- Manually testing or restarting the bot
+- The cron schedule runs multiple times
+
+**How it works:**
+- The bot tracks the last sent date in `.last_sent_date`
+- Before sending, it checks if a message was already sent today
+- If already sent, it skips sending and logs a message
+- This works across bot restarts and is persistent
+
+**Note for GitHub Actions:**
+The `.last_sent_date` file is stored locally and won't persist between workflow runs. For GitHub Actions, duplicate detection only prevents multiple sends within a single workflow run. To avoid duplicates across runs, ensure your workflow schedule doesn't overlap (e.g., run once daily at a specific time).
+
 ## Troubleshooting
 
 ### Bot can't send messages
@@ -261,6 +278,16 @@ The GitHub Actions workflow:
 - Verify your cron expression is correct
 - Check the server timezone
 - View logs to see if there are any errors
+
+### Duplicate messages being sent (VPS deployment)
+- Check if the `.last_sent_date` file exists and has correct permissions
+- Ensure the bot's working directory is writable
+- View logs to see if duplicate detection is working
+
+### Duplicate messages in GitHub Actions
+- This is expected if the workflow runs multiple times per day
+- Adjust your workflow schedule to run only once per day
+- The duplicate detection only works within a single workflow run
 
 ## License
 

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Duplicate message detection to prevent sending the same date's message multiple times
+- `.last_sent_date` tracking file for persistent duplicate detection
+- Comprehensive tests for duplicate detection logic
+- Helper function `formatDateHeaderPlainText()` for date comparison
+
+### Changed
+- Bot now checks for duplicates before sending messages
+- Records sent date after successful message delivery
+- Improved logging for duplicate detection status
+
+### Features
+- **Duplicate Detection**: Automatically prevents sending duplicate messages for the same date
+- **Persistent Tracking**: Works across bot restarts (file-based tracking)
+- **Smart Scheduling**: Safe to run multiple times per day without spamming
+
 ## [1.1.0] - 2026-01-06
 
 ### Added

@@ -107,6 +107,11 @@ func formatDateHeader(date time.Time) string {
 	return fmt.Sprintf("<b>%d %s</b>\n\n", date.Day(), getRussianMonthName(date.Month()))
 }
 
+// formatDateHeaderPlainText returns a plain text date header for comparison
+func formatDateHeaderPlainText(date time.Time) string {
+	return fmt.Sprintf("%d %s", date.Day(), getRussianMonthName(date.Month()))
+}
+
 // getDailyMessage returns today's reflection with a date header, or falls back to the default message
 func getDailyMessage(filePath string, fallbackMessage string) string {
 	today := time.Now()
@@ -132,6 +137,51 @@ func convertMarkdownToHTML(text string) string {
 	text = re.ReplaceAllString(text, "<i>$1</i>")
 
 	return text
+}
+
+// checkIfAlreadySentToday checks if a message has already been sent today
+// by reading the last sent date from a tracking file
+func checkIfAlreadySentToday(date time.Time) (bool, error) {
+	const trackingFile = ".last_sent_date"
+
+	// Format today's date as YYYY-MM-DD
+	todayStr := date.Format("2006-01-02")
+
+	// Try to read the tracking file
+	data, err := os.ReadFile(trackingFile)
+	if err != nil {
+		// File doesn't exist or can't be read - assume not sent today
+		if os.IsNotExist(err) {
+			log.Printf("No tracking file found - first time sending")
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to read tracking file: %w", err)
+	}
+
+	lastSentDate := strings.TrimSpace(string(data))
+	log.Printf("Last sent date: %s, Today: %s", lastSentDate, todayStr)
+
+	// Check if we already sent today
+	if lastSentDate == todayStr {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// recordSentDate records today's date in the tracking file
+func recordSentDate(date time.Time) error {
+	const trackingFile = ".last_sent_date"
+
+	todayStr := date.Format("2006-01-02")
+
+	err := os.WriteFile(trackingFile, []byte(todayStr+"\n"), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write tracking file: %w", err)
+	}
+
+	log.Printf("Recorded sent date: %s", todayStr)
+	return nil
 }
 
 func sendMessageToTopic(bot *tele.Bot, chatID int64, threadID int, message string) error {
@@ -184,27 +234,68 @@ func main() {
 
 	log.Printf("Authorized on account %s", bot.Me.Username)
 
-	// Send message with today's reflection
-	log.Println("Sending message with today's reflection...")
-	dailyMessage := getDailyMessage(config.FilePath, config.Message)
-	if err := sendMessageToTopic(bot, config.ChatID, config.MessageThread, dailyMessage); err != nil {
-		log.Fatalf("Failed to send message: %v", err)
+	// Check if we already sent a message today
+	today := time.Now()
+	alreadySent, err := checkIfAlreadySentToday(today)
+	if err != nil {
+		log.Printf("Warning: Failed to check duplicate status: %v", err)
 	}
 
-	// If RUN_ONCE mode, exit after sending the message
-	if config.RunOnce {
-		log.Println("RUN_ONCE mode enabled. Message sent successfully. Exiting.")
-		return
+	if alreadySent {
+		log.Printf("Message for today (%s) has already been sent. Skipping to avoid duplicate.", today.Format("2006-01-02"))
+
+		// If RUN_ONCE mode, exit without sending
+		if config.RunOnce {
+			log.Println("RUN_ONCE mode enabled. Exiting.")
+			return
+		}
+	} else {
+		// Send message with today's reflection
+		log.Println("Sending message with today's reflection...")
+		dailyMessage := getDailyMessage(config.FilePath, config.Message)
+		if err := sendMessageToTopic(bot, config.ChatID, config.MessageThread, dailyMessage); err != nil {
+			log.Fatalf("Failed to send message: %v", err)
+		}
+
+		// Record that we sent today's message
+		if err := recordSentDate(today); err != nil {
+			log.Printf("Warning: Failed to record sent date: %v", err)
+		}
+
+		// If RUN_ONCE mode, exit after sending the message
+		if config.RunOnce {
+			log.Println("RUN_ONCE mode enabled. Message sent successfully. Exiting.")
+			return
+		}
 	}
 
 	// Set up cron scheduler for continuous operation
 	c := cron.New()
 	_, err = c.AddFunc(config.CronSchedule, func() {
 		log.Println("Executing scheduled message...")
+
+		// Check if we already sent today
+		today := time.Now()
+		alreadySent, err := checkIfAlreadySentToday(today)
+		if err != nil {
+			log.Printf("Warning: Failed to check duplicate status: %v", err)
+		}
+
+		if alreadySent {
+			log.Printf("Message for today (%s) has already been sent. Skipping duplicate.", today.Format("2006-01-02"))
+			return
+		}
+
 		// Get today's reflection each time the cron job runs
 		dailyMessage := getDailyMessage(config.FilePath, config.Message)
 		if err := sendMessageToTopic(bot, config.ChatID, config.MessageThread, dailyMessage); err != nil {
 			log.Printf("Error sending scheduled message: %v", err)
+			return
+		}
+
+		// Record that we sent today's message
+		if err := recordSentDate(today); err != nil {
+			log.Printf("Warning: Failed to record sent date: %v", err)
 		}
 	})
 

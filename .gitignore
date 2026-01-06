@@ -21,6 +21,9 @@ go.work
 # Environment variables
 .env
 
+# Duplicate message tracking
+.last_sent_date
+
 # Personal files directory with daily reflections
 files/
 
