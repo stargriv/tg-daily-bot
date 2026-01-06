@@ -8,21 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Duplicate message detection to prevent sending the same date's message multiple times
-- `.last_sent_date` tracking file for persistent duplicate detection
+- **Channel-based duplicate detection** using Telegram Bot API getUpdates
+- Checks actual Telegram messages to detect if today's message was already sent
+- Fallback to file-based tracking if channel check fails
+- `.last_sent_date` tracking file for persistent duplicate detection (fallback)
 - Comprehensive tests for duplicate detection logic
 - Helper function `formatDateHeaderPlainText()` for date comparison
+- HTTP client for calling Telegram Bot API directly
 
 ### Changed
-- Bot now checks for duplicates before sending messages
+- **Duplicate detection now works across GitHub Actions runs** (checks channel, not local files)
+- Bot now checks for duplicates before sending messages using two-tier approach
 - Records sent date after successful message delivery
-- Improved logging for duplicate detection status
+- Improved logging for duplicate detection status with emoji indicators
 - GitHub Actions workflow now downloads pre-built binary from releases instead of building
 - Reduced workflow execution time by eliminating Go build step
 
 ### Features
-- **Duplicate Detection**: Automatically prevents sending duplicate messages for the same date
-- **Persistent Tracking**: Works across bot restarts (file-based tracking)
+- **Channel-Based Duplicate Detection**: Checks actual Telegram messages to prevent duplicates
+- **GitHub Actions Compatible**: Works perfectly even when runners are ephemeral
+- **Two-Tier Detection**: Primary channel check with file-based fallback
+- **Persistent Across Runs**: No need to store state between GitHub Actions runs
 - **Smart Scheduling**: Safe to run multiple times per day without spamming
 - **Faster Workflow**: Downloads pre-built binary from releases (~3-5 seconds vs ~30+ seconds for build)
 

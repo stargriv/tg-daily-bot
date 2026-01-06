@@ -17,13 +17,14 @@ func TestCheckIfAlreadySentToday(t *testing.T) {
 	// Note: In real implementation, we'd need to make trackingFile configurable
 	// For now, we'll test the logic manually
 
-	t.Run("First time sending", func(t *testing.T) {
+	t.Run("First time sending (file-based)", func(t *testing.T) {
 		// Remove any existing tracking file
 		os.Remove(".last_sent_date")
 		defer os.Remove(".last_sent_date")
 
 		today := time.Now()
-		alreadySent, err := checkIfAlreadySentToday(today)
+		// Pass nil for bot to test file-based tracking only
+		alreadySent, err := checkIfAlreadySentToday(nil, 0, 0, today)
 
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
@@ -34,7 +35,7 @@ func TestCheckIfAlreadySentToday(t *testing.T) {
 		}
 	})
 
-	t.Run("Already sent today", func(t *testing.T) {
+	t.Run("Already sent today (file-based)", func(t *testing.T) {
 		// Remove any existing tracking file
 		os.Remove(".last_sent_date")
 		defer os.Remove(".last_sent_date")
@@ -48,7 +49,8 @@ func TestCheckIfAlreadySentToday(t *testing.T) {
 		}
 
 		// Check if already sent
-		alreadySent, err := checkIfAlreadySentToday(today)
+		// Pass nil for bot to test file-based tracking only
+		alreadySent, err := checkIfAlreadySentToday(nil, 0, 0, today)
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
@@ -58,7 +60,7 @@ func TestCheckIfAlreadySentToday(t *testing.T) {
 		}
 	})
 
-	t.Run("Sent yesterday, not today", func(t *testing.T) {
+	t.Run("Sent yesterday, not today (file-based)", func(t *testing.T) {
 		// Remove any existing tracking file
 		os.Remove(".last_sent_date")
 		defer os.Remove(".last_sent_date")
@@ -73,7 +75,8 @@ func TestCheckIfAlreadySentToday(t *testing.T) {
 		}
 
 		// Check if already sent today
-		alreadySent, err := checkIfAlreadySentToday(today)
+		// Pass nil for bot to test file-based tracking only
+		alreadySent, err := checkIfAlreadySentToday(nil, 0, 0, today)
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}

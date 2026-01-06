@@ -254,13 +254,27 @@ The bot includes built-in duplicate detection to prevent sending the same messag
 - The cron schedule runs multiple times
 
 **How it works:**
-- The bot tracks the last sent date in `.last_sent_date`
-- Before sending, it checks if a message was already sent today
-- If already sent, it skips sending and logs a message
-- This works across bot restarts and is persistent
 
-**Note for GitHub Actions:**
-The `.last_sent_date` file is stored locally and won't persist between workflow runs. For GitHub Actions, duplicate detection only prevents multiple sends within a single workflow run. To avoid duplicates across runs, ensure your workflow schedule doesn't overlap (e.g., run once daily at a specific time).
+1. **Channel-based detection (Primary)**:
+   - Bot fetches recent messages from Telegram using the Bot API
+   - Checks if any message from today contains today's date header
+   - If found, skips sending and logs a message
+   - **Works across bot restarts and GitHub Actions runs** ✅
+
+2. **File-based detection (Fallback)**:
+   - If channel check fails, falls back to `.last_sent_date` file
+   - Tracks the last sent date locally
+   - Works for VPS deployments across restarts
+
+**Why this matters for GitHub Actions:**
+- ✅ **Works perfectly!** The bot checks actual Telegram messages, not local files
+- ✅ Even if the workflow runs multiple times, it won't send duplicates
+- ✅ No need to persist state between GitHub Actions runs
+
+**Limitations:**
+- The bot can only check messages it has received via getUpdates
+- Make sure the bot has been running or receiving updates to see messages
+- The bot needs to be added to the group with message history access
 
 ## Troubleshooting
 
@@ -285,9 +299,10 @@ The `.last_sent_date` file is stored locally and won't persist between workflow 
 - View logs to see if duplicate detection is working
 
 ### Duplicate messages in GitHub Actions
-- This is expected if the workflow runs multiple times per day
-- Adjust your workflow schedule to run only once per day
-- The duplicate detection only works within a single workflow run
+- The bot should automatically prevent duplicates by checking the channel
+- If duplicates still occur, check the bot logs for "Checking channel for message" messages
+- Ensure the bot has received updates (may need to send a test message first)
+- Verify the bot is added to the group with proper permissions
 
 ## License
 
