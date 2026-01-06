@@ -21,6 +21,7 @@ type Config struct {
 	CronSchedule  string
 	Message       string
 	FilePath      string
+	RunOnce       bool
 }
 
 func loadConfig() (*Config, error) {
@@ -44,6 +45,7 @@ func loadConfig() (*Config, error) {
 		CronSchedule:  getEnvOrDefault("CRON_SCHEDULE", "0 9 * * *"), // Default: 9 AM daily
 		Message:       getEnvOrDefault("MESSAGE", "Hello from your scheduled bot!"),
 		FilePath:      getEnvOrDefault("FILE_PATH", "files/daily_reflections_structured.md"),
+		RunOnce:       os.Getenv("RUN_ONCE") == "true",
 	}, nil
 }
 
@@ -182,14 +184,20 @@ func main() {
 
 	log.Printf("Authorized on account %s", bot.Me.Username)
 
-	// Send initial test message with today's reflection
-	log.Println("Sending initial test message with today's reflection...")
+	// Send message with today's reflection
+	log.Println("Sending message with today's reflection...")
 	dailyMessage := getDailyMessage(config.FilePath, config.Message)
 	if err := sendMessageToTopic(bot, config.ChatID, config.MessageThread, dailyMessage); err != nil {
-		log.Printf("Warning: Failed to send initial message: %v", err)
+		log.Fatalf("Failed to send message: %v", err)
 	}
 
-	// Set up cron scheduler
+	// If RUN_ONCE mode, exit after sending the message
+	if config.RunOnce {
+		log.Println("RUN_ONCE mode enabled. Message sent successfully. Exiting.")
+		return
+	}
+
+	// Set up cron scheduler for continuous operation
 	c := cron.New()
 	_, err = c.AddFunc(config.CronSchedule, func() {
 		log.Println("Executing scheduled message...")

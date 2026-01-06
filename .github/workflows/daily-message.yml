@@ -1,0 +1,70 @@
+name: Send Daily Message
+
+on:
+  # Run daily at 9 AM UTC (adjust timezone as needed)
+  schedule:
+    - cron: '0 9 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  send-message:
+    name: Send Daily Telegram Message
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Download daily reflections from Gist (if configured)
+        env:
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          # Create files directory if it doesn't exist
+          mkdir -p files
+
+          # Check if GIST_ID is configured
+          if [ -n "$GIST_ID" ]; then
+            echo "📥 Downloading daily reflections from private gist..."
+
+            # Download the raw gist content
+            # For private gists, use the GIST_TOKEN for authentication
+            curl -H "Authorization: token $GIST_TOKEN" \
+                 -o files/daily_reflections_structured.md \
+                 "https://gist.githubusercontent.com/raw/$GIST_ID/daily_reflections_structured.md"
+
+            echo "✓ Downloaded daily reflections file from gist"
+            ls -lh files/daily_reflections_structured.md
+          else
+            echo "ℹ️  No GIST_ID configured. Using file from repository."
+            if [ -f "files/daily_reflections_structured.md" ]; then
+              echo "✓ Daily reflections file found in repository"
+              ls -lh files/daily_reflections_structured.md
+            else
+              echo "⚠️  Warning: Daily reflections file not found!"
+              echo "Please either:"
+              echo "  1. Commit the file to files/daily_reflections_structured.md, or"
+              echo "  2. Configure GIST_ID and GIST_TOKEN secrets"
+            fi
+          fi
+
+      - name: Build bot
+        run: go build -o tg-daily-bot
+
+      - name: Send daily message
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: ${{ secrets.MESSAGE_THREAD_ID }}
+          FILE_PATH: files/daily_reflections_structured.md
+          MESSAGE: Hello from your scheduled bot!
+          RUN_ONCE: true
+        run: |
+          ./tg-daily-bot

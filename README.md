@@ -175,6 +175,64 @@ To reattach later:
 screen -r tg-daily-bot
 ```
 
+## Deployment with GitHub Actions
+
+You can also run the bot using GitHub Actions to send daily messages without maintaining a VPS.
+
+### Setup
+
+1. **Fork or push this repository to GitHub**
+
+2. **Store your daily reflections** (choose one):
+
+   **Option A: Include in repository (simpler)**
+   - Keep your `files/daily_reflections_structured.md` file in the repo
+   - Note: The file is git-ignored by default. Remove `files/` from `.gitignore` to commit it
+
+   **Option B: Use private GitHub Gist (recommended for private content)**
+   - Store your markdown file in a private gist
+   - See [GIST_SETUP.md](GIST_SETUP.md) for detailed instructions
+   - This keeps your reflections separate from the code repository
+
+3. **Configure GitHub Secrets**
+
+   Go to your repository Settings → Secrets and variables → Actions → New repository secret
+
+   **Required secrets:**
+   - `BOT_TOKEN`: Your Telegram bot token from BotFather
+   - `CHAT_ID`: Your group chat ID (negative number)
+   - `MESSAGE_THREAD_ID`: The topic/thread ID
+
+   **Additional secrets (only if using Gist - Option B):**
+   - `GIST_ID`: Your private gist ID
+   - `GIST_TOKEN`: Personal access token with `gist` scope
+
+4. **Customize the schedule** (optional)
+
+   Edit `.github/workflows/daily-message.yml` to change the schedule:
+   ```yaml
+   schedule:
+     - cron: '0 9 * * *'  # Change this to your desired time (UTC)
+   ```
+
+4. **Enable GitHub Actions**
+
+   - Go to the "Actions" tab in your repository
+   - Enable workflows if prompted
+   - The workflow will run automatically according to the schedule
+   - You can also trigger it manually using "Run workflow"
+
+### How it Works
+
+The GitHub Actions workflow:
+1. Runs on a schedule (default: 9 AM UTC daily)
+2. Checks out your code and daily reflections file
+3. Builds and runs the bot with `RUN_ONCE=true`
+4. Sends today's reflection to your Telegram topic
+5. Exits automatically
+
+**Note:** GitHub Actions uses UTC time. Adjust the cron schedule accordingly for your timezone.
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |
@@ -182,9 +240,10 @@ screen -r tg-daily-bot
 | `BOT_TOKEN` | Yes | - | Your Telegram bot token from BotFather |
 | `CHAT_ID` | Yes | - | The chat ID of your group (negative number) |
 | `MESSAGE_THREAD_ID` | Yes | - | The topic/thread ID where messages will be sent |
-| `CRON_SCHEDULE` | No | `0 9 * * *` | Cron expression for scheduling messages |
+| `CRON_SCHEDULE` | No | `0 9 * * *` | Cron expression for scheduling messages (only used when `RUN_ONCE` is false) |
 | `FILE_PATH` | No | `files/daily_reflections_structured.md` | Path to markdown file with daily reflections (format: `## MM-DD`) |
 | `MESSAGE` | No | `Hello from your scheduled bot!` | Fallback message if no reflection found for today |
+| `RUN_ONCE` | No | `false` | Set to `true` to send one message and exit (for GitHub Actions/single execution) |
 
 ## Troubleshooting
 
