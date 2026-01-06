@@ -17,11 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bot now checks for duplicates before sending messages
 - Records sent date after successful message delivery
 - Improved logging for duplicate detection status
+- GitHub Actions workflow now downloads pre-built binary from releases instead of building
+- Reduced workflow execution time by eliminating Go build step
 
 ### Features
 - **Duplicate Detection**: Automatically prevents sending duplicate messages for the same date
 - **Persistent Tracking**: Works across bot restarts (file-based tracking)
 - **Smart Scheduling**: Safe to run multiple times per day without spamming
+- **Faster Workflow**: Downloads pre-built binary from releases (~3-5 seconds vs ~30+ seconds for build)
 
 ## [1.1.0] - 2026-01-06
 

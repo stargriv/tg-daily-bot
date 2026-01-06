@@ -17,10 +17,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
+      - name: Download latest release binary
+        run: |
+          # Get the latest release info
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest)
+
+          # Extract the download URL for Linux x86_64
+          DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep "browser_download_url.*linux-amd64\"" | cut -d '"' -f 4)
+
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "❌ Failed to find linux-amd64 binary in latest release"
+            exit 1
+          fi
+
+          echo "📥 Downloading from: $DOWNLOAD_URL"
+          curl -L -o tg-daily-bot "$DOWNLOAD_URL"
+          chmod +x tg-daily-bot
+
+          echo "✓ Downloaded and made executable"
+          ./tg-daily-bot --version 2>&1 || echo "Binary ready"
 
       - name: Download daily reflections from Gist (if configured)
         env:
@@ -54,9 +69,6 @@ jobs:
               echo "  2. Configure GIST_ID and GIST_TOKEN secrets"
             fi
           fi
-
-      - name: Build bot
-        run: go build -o tg-daily-bot
 
       - name: Send daily message
         env:
