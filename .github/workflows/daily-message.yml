@@ -3,7 +3,7 @@ name: Send Daily Message
 on:
   # Run daily at 9 AM UTC (adjust timezone as needed)
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 4 * * *'
 
   # Allow manual trigger
   workflow_dispatch:
