@@ -47,7 +47,7 @@ jobs:
 
       - name: Download daily reflections from Gist (if configured)
         env:
-          GIST_ID: ${{ variables.GIST_ID }}
+          GIST_ID: ${{ vars.GIST_ID }}
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: |
           # Create files directory if it doesn't exist
@@ -81,8 +81,8 @@ jobs:
       - name: Send daily message
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ variables.CHAT_ID }}
-          MESSAGE_THREAD_ID: ${{ variables.MESSAGE_THREAD_ID }}
+          CHAT_ID: ${{ vars.CHAT_ID }}
+          MESSAGE_THREAD_ID: ${{ vars.MESSAGE_THREAD_ID }}
           FILE_PATH: files/daily_reflections_structured.md
           MESSAGE: Hello from your scheduled bot!
           RUN_ONCE: true
