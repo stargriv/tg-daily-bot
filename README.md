@@ -195,18 +195,18 @@ You can also run the bot using GitHub Actions to send daily messages without mai
    - See [GIST_SETUP.md](GIST_SETUP.md) for detailed instructions
    - This keeps your reflections separate from the code repository
 
-3. **Configure GitHub Secrets**
+3. **Configure GitHub Secrets and Variables**
 
-   Go to your repository Settings → Secrets and variables → Actions → New repository secret
+   Go to your repository Settings → Secrets and variables → Actions
 
-   **Required secrets:**
+   **Required secrets (Settings → Secrets and variables → Actions → Secrets):**
    - `BOT_TOKEN`: Your Telegram bot token from BotFather
+   - `GIST_TOKEN`: Personal access token with `gist` scope (only if using Gist - Option B)
+
+   **Required variables (Settings → Secrets and variables → Actions → Variables):**
    - `CHAT_ID`: Your group chat ID (negative number)
    - `MESSAGE_THREAD_ID`: The topic/thread ID
-
-   **Additional secrets (only if using Gist - Option B):**
-   - `GIST_ID`: Your private gist ID
-   - `GIST_TOKEN`: Personal access token with `gist` scope
+   - `GIST_ID`: Your private gist ID (only if using Gist - Option B)
 
 4. **Customize the schedule** (optional)
 

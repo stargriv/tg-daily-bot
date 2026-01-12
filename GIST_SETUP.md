@@ -36,19 +36,28 @@ The workflow needs authentication to access your private gist.
 6. Click **"Generate token"**
 7. **IMPORTANT:** Copy the token immediately (you won't see it again!)
 
-## Step 4: Add GitHub Secrets
+## Step 4: Add GitHub Secrets and Variables
 
 Go to your repository: **Settings → Secrets and variables → Actions**
+
+### Add Secrets (Secrets tab)
 
 Add or update these secrets:
 
 | Secret Name | Value | Description |
 |-------------|-------|-------------|
 | `BOT_TOKEN` | `123456:ABC-DEF...` | Your Telegram bot token from BotFather |
+| `GIST_TOKEN` | `ghp_abc123...` | Your personal access token from Step 3 |
+
+### Add Variables (Variables tab)
+
+Add or update these variables:
+
+| Variable Name | Value | Description |
+|---------------|-------|-------------|
 | `CHAT_ID` | `-1001234567890` | Your group chat ID (negative number) |
 | `MESSAGE_THREAD_ID` | `123` | Your topic/thread ID |
 | `GIST_ID` | `abc123def456...` | Your gist ID from Step 2 |
-| `GIST_TOKEN` | `ghp_abc123...` | Your personal access token from Step 3 |
 
 ## Step 5: Test the Workflow
 
