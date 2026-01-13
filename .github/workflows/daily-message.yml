@@ -49,7 +49,11 @@ jobs:
         env:
           GIST_ID: ${{ vars.GIST_ID }}
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          FILE_PATH: ${{ vars.FILE_PATH }}
         run: |
+          # Extract filename from FILE_PATH
+          FILENAME=$(basename "$FILE_PATH")
+
           # Create files directory if it doesn't exist
           mkdir -p files
 
@@ -60,20 +64,20 @@ jobs:
             # Download the raw gist content
             # For private gists, use the GIST_TOKEN for authentication
             curl -H "Authorization: token $GIST_TOKEN" \
-                 -o files/daily_reflections_structured.md \
-                 "https://gist.githubusercontent.com/raw/$GIST_ID/daily_reflections_structured.md"
+                 -o "$FILE_PATH" \
+                 "https://gist.githubusercontent.com/raw/$GIST_ID/$FILENAME"
 
             echo "✓ Downloaded daily reflections file from gist"
-            ls -lh files/daily_reflections_structured.md
+            ls -lh "$FILE_PATH"
           else
             echo "ℹ️  No GIST_ID configured. Using file from repository."
-            if [ -f "files/daily_reflections_structured.md" ]; then
+            if [ -f "$FILE_PATH" ]; then
               echo "✓ Daily reflections file found in repository"
-              ls -lh files/daily_reflections_structured.md
+              ls -lh "$FILE_PATH"
             else
               echo "⚠️  Warning: Daily reflections file not found!"
               echo "Please either:"
-              echo "  1. Commit the file to files/daily_reflections_structured.md, or"
+              echo "  1. Commit the file to $FILE_PATH, or"
               echo "  2. Configure GIST_ID variable and GIST_TOKEN secret"
             fi
           fi
@@ -83,7 +87,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ vars.CHAT_ID }}
           MESSAGE_THREAD_ID: ${{ vars.MESSAGE_THREAD_ID }}
-          FILE_PATH: files/daily_reflections_structured.md
+          FILE_PATH: ${{ vars.FILE_PATH }}
           MESSAGE: Hello from your scheduled bot!
           RUN_ONCE: true
         run: |
